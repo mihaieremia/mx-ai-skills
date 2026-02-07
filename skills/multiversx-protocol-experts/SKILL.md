@@ -144,8 +144,8 @@ Result: Deterministic but unpredictable validator selection
 
 ### Finality
 
-- **Intra-shard**: Instant finality (~6 seconds)
-- **Cross-shard**: Finality after receiver shard processes (~12-18 seconds)
+- **Intra-shard**: Instant finality (~0.6 seconds per round, Supernova)
+- **Cross-shard**: Finality after receiver shard processes (~2-3 seconds)
 
 ## 4. Token Standards (ESDT)
 
@@ -329,7 +329,7 @@ fn cross_shard_call(&self) {
         .to(&other_contract)
         .typed(proxy::Proxy)
         .remote_function()
-        .with_gas_limit(GAS_FOR_REMOTE)
+        .gas(GAS_FOR_REMOTE)
         .callback(self.callbacks().on_result())
         .with_extra_gas_for_callback(GAS_FOR_CALLBACK)
         .async_call_and_exit();
@@ -351,7 +351,7 @@ Monitor MultiversX Improvement Proposals for standard implementations:
 | Constant | Value | Notes |
 |----------|-------|-------|
 | Max shards | 3 + Metachain | Current mainnet configuration |
-| Round duration | ~6 seconds | Block time |
+| Round duration | ~0.6 seconds | Block time (Supernova) |
 | Epoch duration | ~24 hours | Validator reshuffling period |
 | Max TX size | 256 KB | Transaction data limit |
 | Max gas limit | 600,000,000 | Per transaction |

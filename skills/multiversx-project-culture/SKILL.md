@@ -231,7 +231,7 @@ ls -la Cargo.lock
 ```toml
 # GOOD: Specific versions
 [dependencies.multiversx-sc]
-version = "0.54.0"
+version = "0.64.0"
 
 # BAD: Wildcard versions
 [dependencies.multiversx-sc]

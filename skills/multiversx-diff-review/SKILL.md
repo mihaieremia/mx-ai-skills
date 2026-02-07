@@ -197,16 +197,16 @@ fn sensitive_action(&self) { }
 ### Payment Handling Changes
 ```rust
 // v1 - Validated token
-#[payable("*")]
+#[payable]
 fn deposit(&self) {
-    let payment = self.call_value().single_esdt();
+    let payment = self.call_value().single();
     require!(payment.token_identifier == self.accepted_token().get(), "Wrong token");
 }
 
 // v2 - DANGEROUS: Removed validation
-#[payable("*")]
+#[payable]
 fn deposit(&self) {
-    let payment = self.call_value().single_esdt();
+    let payment = self.call_value().single();
     // Missing token validation! Accepts any token now
 }
 ```

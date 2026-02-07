@@ -33,16 +33,16 @@ Multiply the value of a single vulnerability finding by systematically locating 
 **Initial Bug:**
 ```rust
 // Found: Missing payment validation in deposit()
-#[payable("*")]
+#[payable]
 fn deposit(&self) {
-    let payment = self.call_value().single_esdt();
+    let payment = self.call_value().single();
     self.balances().update(|b| *b += payment.amount);
     // Bug: No token ID validation!
 }
 ```
 
 **Abstract Pattern:**
-- `#[payable("*")]` endpoint
+- `#[payable]` endpoint
 - Uses `call_value()` to get payment
 - Does NOT validate `token_identifier`
 
@@ -79,13 +79,13 @@ rules:
   - id: mvx-payable-no-token-check
     patterns:
       - pattern: |
-          #[payable("*")]
+          #[payable]
           $ANNOTATIONS
           fn $FUNC(&self, $...PARAMS) {
               $...BODY
           }
       - pattern-not: |
-          #[payable("*")]
+          #[payable]
           $ANNOTATIONS
           fn $FUNC(&self, $...PARAMS) {
               <... token_identifier ...>
@@ -356,9 +356,9 @@ Found [N] instances of [bug description] across the codebase.
 // Found in stake.rs:45
 #[payable("EGLD")]
 fn stake(&self) {
-    let payment = self.call_value().egld_value();
+    let payment = self.call_value().egld();
     // Bug: No check for amount > 0
-    self.staked().update(|s| *s += payment.clone_value());
+    self.staked().update(|s| *s += payment.amount.as_big_uint());
 }
 ```
 
@@ -382,9 +382,9 @@ done > payable_review.txt
 ```rust
 #[payable("EGLD")]
 fn stake(&self) {
-    let payment = self.call_value().egld_value();
-    require!(payment.clone_value() > 0, "Amount must be positive");
-    self.staked().update(|s| *s += payment.clone_value());
+    let payment = self.call_value().egld();
+    require!(payment.amount.as_big_uint() > 0, "Amount must be positive");
+    self.staked().update(|s| *s += payment.amount.as_big_uint());
 }
 ```
 

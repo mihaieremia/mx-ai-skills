@@ -38,7 +38,7 @@ cargo fuzz init
 ### MultiversX Test Environment
 ```toml
 [dev-dependencies]
-multiversx-sc-scenario = "0.54"
+multiversx-sc-scenario = "0.64.0"
 ```
 
 ## 2. Defining Invariants

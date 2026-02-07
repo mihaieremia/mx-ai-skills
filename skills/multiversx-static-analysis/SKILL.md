@@ -88,34 +88,39 @@ grep -rn "\.collect()" src/
 Search for payment handling:
 ```bash
 grep -rn "call_value()" src/
+grep -rn "\.single()" src/
+grep -rn "\.all()" src/
+grep -rn "\.array()" src/
+grep -rn "\.single_optional()" src/
+# Legacy patterns (may still be in older code)
 grep -rn "all_esdt_transfers" src/
 grep -rn "single_esdt" src/
 ```
 
 For each occurrence, verify:
-- [ ] Token ID checked against expected value
+- [ ] Token ID checked against expected value (using `TokenId` comparison)
 - [ ] Token nonce validated (for NFT/SFT)
-- [ ] Amount validated (non-zero, within bounds)
+- [ ] Amount validated (within bounds — non-zero is guaranteed by `NonZeroBigUint` in `Payment`)
 
 ```rust
 // VULNERABLE
-#[payable("*")]
+#[payable]
 fn deposit(&self) {
-    let payment = self.call_value().single_esdt();
-    self.balances().update(|b| *b += payment.amount);
+    let payment = self.call_value().single();
+    self.balances().update(|b| *b += payment.amount.as_big_uint());
     // No token ID check! Accepts any token
 }
 
 // SECURE
-#[payable("*")]
+#[payable]
 fn deposit(&self) {
-    let payment = self.call_value().single_esdt();
+    let payment = self.call_value().single();
     require!(
         payment.token_identifier == self.accepted_token().get(),
         "Wrong token"
     );
-    require!(payment.amount > 0, "Zero amount");
-    self.balances().update(|b| *b += payment.amount);
+    // Note: amount > 0 check is no longer needed — Payment.amount is NonZeroBigUint
+    self.balances().update(|b| *b += payment.amount.as_big_uint());
 }
 ```
 
@@ -374,6 +379,6 @@ go build -race
 | Panic inducers | `unwrap()\|expect(` | High |
 | Unbounded iteration | `\.iter()` | High |
 | Missing access control | `#[endpoint]` without `#[only_owner]` | High |
-| Token validation | `call_value()` without require | High |
+| Token validation | `call_value().single()` without token ID require | High |
 | Callback assumptions | `#[callback]` without error handling | Medium |
 | Raw arithmetic | `+ \| - \| *` on u64 | Medium |

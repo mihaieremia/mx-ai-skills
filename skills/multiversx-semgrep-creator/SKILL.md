@@ -101,13 +101,13 @@ rules:
     severity: WARNING
     patterns:
       - pattern: |
-          #[payable("*")]
+          #[payable]
           #[endpoint]
           fn $FUNC(&self, $...PARAMS) {
               $...BODY
           }
       - pattern-not: |
-          #[payable("*")]
+          #[payable]
           #[endpoint]
           fn $FUNC(&self, $...PARAMS) {
               <... self.call_value() ...>

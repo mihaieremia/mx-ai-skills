@@ -74,14 +74,14 @@ The fix addresses one path but misses variants:
 // VULNERABILITY: Missing amount validation
 #[endpoint]
 fn deposit(&self) {
-    let amount = self.call_value().egld_value();
+    let amount = self.call_value().egld();
     // No check for amount > 0
 }
 
 // PARTIAL FIX: Only fixed deposit, not transfer
 #[endpoint]
 fn deposit(&self) {
-    let amount = self.call_value().egld_value();
+    let amount = self.call_value().egld();
     require!(amount > 0, "Amount must be positive");  // Fixed!
 }
 

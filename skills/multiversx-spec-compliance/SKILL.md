@@ -87,9 +87,9 @@ const MIN_STAKE: u64 = 1000_000000000000000000u64;  // 1000 EGLD in wei
 #[payable("EGLD")]
 #[endpoint]
 fn stake(&self) {
-    let payment = self.call_value().egld_value();
+    let payment = self.call_value().egld();
     require!(
-        payment.clone_value() >= BigUint::from(MIN_STAKE),
+        *payment >= BigUint::from(MIN_STAKE),
         "Minimum stake is 1000 EGLD"  // ← Implements C1
     );
     // ...
@@ -136,9 +136,9 @@ fn calculate_apy(&self, base_rate: BigUint, boost_factor: BigUint) -> BigUint {
 ```rust
 #[endpoint]
 fn withdraw(&self) {
-    let stake_time = self.stake_timestamp(&caller).get();
-    let current_time = self.blockchain().get_block_timestamp();
-    let lock_period = self.lock_period().get();  // Check: Is this 7 days?
+    let stake_time = self.stake_timestamp(&caller).get(); // TimestampMillis
+    let current_time = self.blockchain().get_block_timestamp_millis();
+    let lock_period = self.lock_period().get();  // DurationMillis - Check: Is this 7 days?
 
     require!(
         current_time >= stake_time + lock_period,

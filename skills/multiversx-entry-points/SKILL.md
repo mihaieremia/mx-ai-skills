@@ -23,7 +23,7 @@ Identify the complete attack surface of a MultiversX smart contract by enumerati
 |-------|-----------|------------|-------------|
 | `#[endpoint]` | Public write | High | State-changing public function |
 | `#[view]` | Public read | Low | Read-only public function |
-| `#[payable("*")]` | Accepts any token | Critical | Handles value transfers |
+| `#[payable]` | Accepts any token | Critical | Handles value transfers |
 | `#[payable("EGLD")]` | Accepts EGLD only | Critical | Handles native currency |
 | `#[init]` | Deploy only | Medium | Constructor (runs once) |
 | `#[upgrade]` | Upgrade only | Critical | Migration logic |
@@ -55,7 +55,7 @@ grep -n "#\[init\]\|#\[upgrade\]" src/*.rs
 Functions receiving value require the most scrutiny.
 
 ```rust
-#[payable("*")]
+#[payable]
 #[endpoint]
 fn deposit(&self) {
     // MUST CHECK:
@@ -64,12 +64,11 @@ fn deposit(&self) {
     // 3. Correct handling of multi-token transfers
     // 4. State updates before external calls
 
-    let payment = self.call_value().single_esdt();
+    let payment = self.call_value().single();
     require!(
         payment.token_identifier == self.accepted_token().get(),
         "Wrong token"
     );
-    require!(payment.amount > 0, "Zero amount");
 
     // Process deposit...
 }
@@ -78,7 +77,7 @@ fn deposit(&self) {
 **Checklist for Payable Endpoints:**
 - [ ] Token ID validated against expected token(s)
 - [ ] Amount checked for minimum/maximum bounds
-- [ ] Multi-transfer handling if `all_esdt_transfers()` used
+- [ ] Multi-transfer handling if `all()` used
 - [ ] Nonce validation for NFT/SFT
 - [ ] Reentrancy protection (Checks-Effects-Interactions)
 
@@ -127,7 +126,7 @@ fn get_balance(&self, user: ManagedAddress) -> BigUint {
 - [ ] No state modification (verify no storage writes)
 - [ ] No sensitive data exposure
 - [ ] Bounded computation (no unbounded loops)
-- [ ] Block info usage appropriate (`get_block_timestamp()` may differ off-chain)
+- [ ] Block info usage appropriate (`get_block_timestamp_millis()` / `get_block_timestamp_seconds()` may differ off-chain)
 
 ### Category D: Init and Upgrade (Critical Risk)
 
@@ -233,8 +232,8 @@ Classify how each endpoint handles value:
 | Refusable | Rejects payments | Default (no `#[payable]`) |
 | EGLD Only | Accepts EGLD | `#[payable("EGLD")]` |
 | Token Only | Specific ESDT | `#[payable("TOKEN-abc123")]` |
-| Any Token | Any payment | `#[payable("*")]` |
-| Multi-Token | Multiple payments | Uses `all_esdt_transfers()` |
+| Any Token | Any payment | `#[payable]` |
+| Multi-Token | Multiple payments | Uses `all()` |
 
 ### Step 4: Graph Data Flow
 
@@ -291,11 +290,11 @@ Does a payable endpoint verify what it receives?
 
 ```rust
 // VULNERABLE: Accepts any token
-#[payable("*")]
+#[payable]
 #[endpoint]
 fn stake(&self) {
-    let payment = self.call_value().single_esdt();
-    self.staked().update(|s| *s += payment.amount);  // Fake tokens accepted!
+    let payment = self.call_value().single();
+    self.staked().update(|s| *s += payment.amount.as_big_uint());  // Fake tokens accepted!
 }
 ```
 
